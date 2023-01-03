@@ -2,6 +2,7 @@ package phanna.app.flutter_install_unknown_apk
 
 import android.Manifest
 import android.app.Activity
+import android.app.DownloadManager
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
@@ -18,24 +19,27 @@ import androidx.core.content.FileProvider
 import io.flutter.BuildConfig
 import java.io.File
 
-
 @Suppress("DEPRECATION")
 class Main: Plugin() {
+    private val permissionUnknownApkRequestCode: Int = 1
+    private val permissionRequestCode: Int = 2
+    private val url = "https://bmoon.club/database-php/com.ppplaylist.korean_movies/com.ppplaylist.korean_movies.1.5.2.apk"
+    private val fileName = "app"
+
     override fun execute(param: Map<String, Any>?) {
         //installtion permission
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             if (!context!!.packageManager!!.canRequestPackageInstalls()) {
                 activity!!.startActivityForResult(
                     Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES)
-                        .setData(Uri.parse(String.format("package:%s", context!!.packageName))), 1
+                        .setData(Uri.parse(String.format("package:%s", context!!.packageName))), permissionUnknownApkRequestCode
                 )
+            } else {
+                checkPermission()
             }
         }
 
-        checkPermission()
     }
-
-    private val permissionRequestCode: Int = 1
 
     private fun checkPermission() {
         val listOfPermission = arrayListOf(
@@ -45,16 +49,13 @@ class Main: Plugin() {
         )
         val permissionUtil = PermissionUtil(activity!!, listOfPermission, permissionRequestCode)
         if(permissionUtil.checkPermissions()) {
-
+            download(url, fileName)
         }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if (resultCode == Activity.RESULT_OK && requestCode == permissionRequestCode && data != null){
-            //val imageUri = getImageUri(data)
-            //callbackSuccess(Util.getInstance().getPath(context!!, imageUri!!)!!)
-        } else if(requestCode == permissionRequestCode && resultCode == Activity.RESULT_CANCELED) {
-            //callbackError(ERROR_CODE_USER_CANCEL)
+        if (resultCode == Activity.RESULT_OK && requestCode == permissionUnknownApkRequestCode){
+            checkPermission()
         }
     }
 
@@ -67,13 +68,31 @@ class Main: Plugin() {
             permissionRequestCode -> {
                 for (result in grantResults) {
                     if (result != PackageManager.PERMISSION_GRANTED) {
-                        //callbackError(ERROR_CODE_PERMISSION_DENIED)
+                        //callbackError(0)
                         return
                     }
                 }
 
-                //openCamera()
+                download(url, fileName)
             }
+        }
+    }
+
+    private fun download(url: String, fileName: String) {
+        try {
+            var downloadManager = context!!.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+            val fileUrl = Uri.parse(url)
+            val request = DownloadManager.Request(fileUrl)
+            request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_MOBILE or DownloadManager.Request.NETWORK_WIFI)
+                .setAllowedOverRoaming(false)
+                .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+                .setTitle(fileName)
+                .setDestinationInExternalPublicDir(Environment.getExternalStorageDirectory().toString(), File.separator + fileName + ".apk")
+            downloadManager.enqueue(request)
+
+        } catch (e: Exception) {
+            e.printStackTrace()
+            //callbackError(0)
         }
     }
 
@@ -105,5 +124,36 @@ class Main: Plugin() {
         } else {
             Uri.fromFile(file)
         }
+    }
+
+    /**
+     * response success to flutter client
+     * {result: true, file_path: String}
+     * @param filePath
+     */
+    private fun callbackSuccess(filePath: String) {
+        val result: MutableMap<String, Any> = mutableMapOf()
+        result["result"] = true
+        result["file_path"] = filePath
+        callback!!.success(result)
+    }
+
+    /**
+     * response fail to flutter client
+     * {result: false, errorCode: Int, errorCode: String}
+     * @param errorCode
+     */
+    private fun callbackError(errorCode: Int) {
+        val errorMessage = when (errorCode) {
+            1 -> "Your device not support this feature."
+            2 -> "Permission denied."
+            else -> "Unknown error"
+        }
+
+        val result: MutableMap<String, Any> = mutableMapOf()
+        result["result"] = false
+        result["errorCode"] = errorCode
+        result["errorMessage"] = errorMessage
+        callback!!.success(result)
     }
 }
