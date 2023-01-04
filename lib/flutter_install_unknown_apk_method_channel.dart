@@ -10,8 +10,11 @@ class MethodChannelFlutterInstallUnknownApk extends FlutterInstallUnknownApkPlat
   final methodChannel = const MethodChannel('flutter_install_unknown_apk');
 
   @override
-  Future<String?> getPlatformVersion() async {
-    final version = await methodChannel.invokeMethod<String>('getPlatformVersion');
-    return version;
+  Future<Map<String, dynamic>> execute(String pluginKey, Object param) async {
+    final result = await methodChannel.invokeMethod(pluginKey, {
+      'param': param
+    });
+
+    return Map.from(result);
   }
 }

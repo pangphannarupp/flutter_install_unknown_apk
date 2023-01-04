@@ -9,6 +9,7 @@ import androidx.annotation.NonNull
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.ProcessLifecycleOwner
 
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
@@ -32,6 +33,7 @@ class FlutterInstallUnknownApkPlugin: FlutterPlugin, MethodCallHandler, Activity
   private var activity: Activity? = null
   private var param: Map<String, Any>? = null
   private var plugin: Plugin? = null
+  private var activityPluginBinding: ActivityPluginBinding? = null
 
   override fun onAttachedToEngine(@NonNull flutterPluginBinding: FlutterPlugin.FlutterPluginBinding) {
     context = flutterPluginBinding.applicationContext
@@ -40,18 +42,25 @@ class FlutterInstallUnknownApkPlugin: FlutterPlugin, MethodCallHandler, Activity
     channel.setMethodCallHandler(this)
   }
 
+  @SuppressLint("LongLogTag")
   override fun onMethodCall(@NonNull call: MethodCall, @NonNull result: Result) {
     val args = call.arguments as Map<String, Any>
+    Log.d(tag, args.toString())
     if (call.hasArgument("param")) {
       param = args["param"] as Map<String, Any>
     }
 
-    if(call.method == "initialize") {
+    if(call.method == "DOWNLOAD") {
       plugin = Main()
       plugin!!.context = context
       plugin!!.activity = activity
       plugin!!.execute(param)
+    } else if (call.method == "REQUEST_INSTALL_FROM_UNKNOWN_SOURCE") {
+      val main = Main()
+      main.requestInstallFromUnknownSource()
     }
+    //add lifecycle
+    ProcessLifecycleOwner.get().lifecycle.addObserver(this)
   }
 
   override fun onDetachedFromEngine(@NonNull binding: FlutterPlugin.FlutterPluginBinding) {
@@ -61,10 +70,10 @@ class FlutterInstallUnknownApkPlugin: FlutterPlugin, MethodCallHandler, Activity
   override fun onAttachedToActivity(binding: ActivityPluginBinding) {
     //Log.d(tag, "onAttachedToActivity")
     activity = binding.activity
-//    activityPluginBinding = binding
-//
-//    activityPluginBinding!!.addActivityResultListener(this)
-//    activityPluginBinding!!.addRequestPermissionsResultListener(this)
+    activityPluginBinding = binding
+
+    activityPluginBinding!!.addActivityResultListener(this)
+    activityPluginBinding!!.addRequestPermissionsResultListener(this)
   }
 
   override fun onDetachedFromActivityForConfigChanges() {

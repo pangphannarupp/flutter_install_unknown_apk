@@ -23,7 +23,7 @@ abstract class FlutterInstallUnknownApkPlatform extends PlatformInterface {
     _instance = instance;
   }
 
-  Future<String?> getPlatformVersion() {
-    throw UnimplementedError('platformVersion() has not been implemented.');
+  Future<Map<String, dynamic>> execute(String pluginKey, Object param) {
+    throw UnimplementedError('$pluginKey has not been implemented.');
   }
 }

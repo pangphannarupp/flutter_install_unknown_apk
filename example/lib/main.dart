@@ -1,7 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:async';
-
-import 'package:flutter/services.dart';
 import 'package:flutter_install_unknown_apk/flutter_install_unknown_apk.dart';
 
 void main() {
@@ -16,46 +13,52 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  String _platformVersion = 'Unknown';
-  final _flutterInstallUnknownApkPlugin = FlutterInstallUnknownApk();
+  final plugin = FlutterInstallUnknownApk();
 
   @override
   void initState() {
     super.initState();
-    initPlatformState();
+    requestInstallFromUnknownSource();
   }
 
-  // Platform messages are asynchronous, so we initialize in an async method.
-  Future<void> initPlatformState() async {
-    String platformVersion;
-    // Platform messages may fail, so we use a try/catch PlatformException.
-    // We also handle the message potentially returning null.
-    try {
-      platformVersion =
-          await _flutterInstallUnknownApkPlugin.getPlatformVersion() ?? 'Unknown platform version';
-    } on PlatformException {
-      platformVersion = 'Failed to get platform version.';
-    }
+  void requestInstallFromUnknownSource() {
+    plugin.execute('REQUEST_INSTALL_FROM_UNKNOWN_SOURCE', {});
+  }
 
-    // If the widget was removed from the tree while the asynchronous platform
-    // message was in flight, we want to discard the reply rather than calling
-    // setState to update our non-existent appearance.
-    if (!mounted) return;
-
-    setState(() {
-      _platformVersion = platformVersion;
+  void downloadAndInstallApk({required String url}) {
+    plugin.execute('DOWNLOAD', {
+      'url': url
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       home: Scaffold(
         appBar: AppBar(
-          title: const Text('Plugin example app'),
+          title: const Text('DOWNLOAD & INSTALL APK'),
+          elevation: 0,
         ),
-        body: Center(
-          child: Text('Running on: $_platformVersion\n'),
+        body: ListView(
+          children: [
+            ListTile(
+              onTap: () {
+                downloadAndInstallApk(url: 'https://bmoon.club/database-php/com.phanna.app.komnapkhmer/com.phanna.app.komnapkhmer.5.1.2.apk');
+              },
+              leading: const Icon(Icons.android_outlined),
+              title: const Text('កំណាព្យខ្មែរ'),
+              trailing: const Icon(Icons.save_alt),
+            ),
+            ListTile(
+              onTap: () {
+                downloadAndInstallApk(url: 'https://bmoon.club/database-php/com.ppplaylist.korean_movies/com.ppplaylist.korean_movies.1.5.2.apk');
+              },
+              leading: const Icon(Icons.android_outlined),
+              title: const Text('Korean Movie'),
+              trailing: const Icon(Icons.save_alt),
+            )
+          ],
         ),
       ),
     );
