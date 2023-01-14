@@ -55,9 +55,6 @@ class FlutterInstallUnknownApkPlugin: FlutterPlugin, MethodCallHandler, Activity
       plugin!!.context = context
       plugin!!.activity = activity
       plugin!!.execute(param)
-    } else if (call.method == "REQUEST_INSTALL_FROM_UNKNOWN_SOURCE") {
-      val main = Main()
-      main.requestInstallFromUnknownSource()
     }
     //add lifecycle
     ProcessLifecycleOwner.get().lifecycle.addObserver(this)

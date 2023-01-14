@@ -2,18 +2,23 @@ package phanna.app.flutter_install_unknown_apk
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.app.Activity
 import android.app.DownloadManager
+import android.app.ProgressDialog
 import android.content.*
 import android.content.pm.PackageManager
+import android.database.Cursor
 import android.net.Uri
-import android.os.Build
-import android.os.Environment
+import android.os.*
 import android.provider.Settings
 import android.util.Log
+import android.widget.ProgressBar
+import android.widget.TextView
 import androidx.core.content.FileProvider
 import java.io.File
 import java.util.*
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
+
 
 @Suppress("DEPRECATION")
 class Main: Plugin() {
@@ -22,6 +27,8 @@ class Main: Plugin() {
     private var url = ""
     private var fileName = ""
     private var checkInstallReady = false
+    private val executor: ExecutorService = Executors.newFixedThreadPool(1)
+    private var progressBarDialog: ProgressDialog? = null
 
     override fun execute(param: Map<String, Any>?) {
         url = param!!["url"].toString()
@@ -78,8 +85,25 @@ class Main: Plugin() {
         }
     }
 
+    @SuppressLint("Range", "SetTextI18n")
     private fun download(url: String) {
         try {
+            val filePath: String = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).toString() + "/" + fileName
+            val file = File(filePath)
+            if (file.exists()) {
+                file.delete()
+            }
+
+
+            progressBarDialog = ProgressDialog(activity, ProgressDialog.THEME_HOLO_LIGHT)
+//            progressBarDialog!!.setTitle("Download")
+            progressBarDialog!!.setMessage("Download")
+            progressBarDialog!!.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL)
+            progressBarDialog!!.progress = 0
+            progressBarDialog!!.setCancelable(false)
+            progressBarDialog!!.show()
+
+
             Log.d("MAIN_DOWNLOAD", "url => $url")
             Log.d("MAIN_DOWNLOAD", "fileName => $fileName")
             val downloadManager = context!!.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
@@ -91,8 +115,46 @@ class Main: Plugin() {
                 .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
                 .setTitle(fileName)
                 .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, File.separator + fileName)
-            downloadManager.enqueue(request)
-            context!!.registerReceiver(onComplete, IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE))
+//            downloadManager.enqueue(request)
+//            context!!.registerReceiver(onComplete, IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE))
+            //Run a task in a background thread to check download progress
+            val downloadId = downloadManager.enqueue(request)
+            executor.execute {
+                var progress = 0
+                var isDownloadFinished = false
+                while (!isDownloadFinished) {
+                    val cursor: Cursor =
+                        downloadManager.query(DownloadManager.Query().setFilterById(downloadId))
+                    if (cursor.moveToFirst()) {
+                        when (cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_STATUS))) {
+                            DownloadManager.STATUS_RUNNING -> {
+                                val totalBytes: Long =
+                                    cursor.getLong(cursor.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES))
+                                if (totalBytes > 0) {
+                                    val downloadedBytes: Long =
+                                        cursor.getLong(cursor.getColumnIndex(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR))
+                                    progress = (downloadedBytes * 100 / totalBytes).toInt()
+                                }
+                            }
+                            DownloadManager.STATUS_SUCCESSFUL -> {
+                                progress = 100
+                                isDownloadFinished = true
+                                executor.shutdown()
+                                mainHandler.removeCallbacksAndMessages(null)
+                                progressBarDialog!!.dismiss()
+                                requestInstallAPK()
+                            }
+                            DownloadManager.STATUS_PAUSED, DownloadManager.STATUS_PENDING -> {}
+                            DownloadManager.STATUS_FAILED -> isDownloadFinished = true
+                        }
+                        val message: Message = Message.obtain()
+                        message.what = 1
+                        message.arg1 = progress
+                        mainHandler.sendMessage(message)
+                    }
+                }
+            }
+
         } catch (e: Exception) {
             e.printStackTrace()
             Log.d("MAIN_DOWNLOAD", "Exception => ${e.printStackTrace()}")
@@ -102,8 +164,26 @@ class Main: Plugin() {
 
     var onComplete: BroadcastReceiver = object : BroadcastReceiver() {
         override fun onReceive(ctxt: Context, intent: Intent) {
+            executor.shutdown()
+            mainHandler.removeCallbacksAndMessages(null)
+//            val param = mutableMapOf<String, Any>()
+//            param["type"] = "hide_loading"
+//            dialogPlugin.execute(param)
+
+            progressBarDialog!!.dismiss()
+
             requestInstallAPK()
         }
+    }
+
+    private val mainHandler = Handler(
+        Looper.getMainLooper()
+    ) { msg ->
+        if (msg.what == 1) {
+            val downloadProgress = msg.arg1
+            progressBarDialog!!.progress = downloadProgress
+        }
+        true
     }
 
     private fun requestInstallAPK() {

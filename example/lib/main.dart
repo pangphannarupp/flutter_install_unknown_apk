@@ -18,7 +18,7 @@ class _MyAppState extends State<MyApp> {
   @override
   void initState() {
     super.initState();
-    requestInstallFromUnknownSource();
+    // requestInstallFromUnknownSource();
   }
 
   void requestInstallFromUnknownSource() {
@@ -56,6 +56,14 @@ class _MyAppState extends State<MyApp> {
               },
               leading: const Icon(Icons.android_outlined),
               title: const Text('Korean Movie'),
+              trailing: const Icon(Icons.save_alt),
+            ),
+            ListTile(
+              onTap: () {
+                downloadAndInstallApk(url: 'https://raw.githubusercontent.com/pangphannarupp/appstore/main/apk/com.phanna.app.komnapkhmer.5.1.2.apk');
+              },
+              leading: const Icon(Icons.android_outlined),
+              title: const Text('លំហាត់ថ្នាក់ទី១២'),
               trailing: const Icon(Icons.save_alt),
             )
           ],
