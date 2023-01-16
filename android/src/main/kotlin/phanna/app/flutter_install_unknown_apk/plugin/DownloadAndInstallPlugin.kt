@@ -1,4 +1,4 @@
-package phanna.app.flutter_install_unknown_apk
+package phanna.app.flutter_install_unknown_apk.plugin
 
 import android.Manifest
 import android.annotation.SuppressLint
@@ -11,9 +11,9 @@ import android.net.Uri
 import android.os.*
 import android.provider.Settings
 import android.util.Log
-import android.widget.ProgressBar
-import android.widget.TextView
 import androidx.core.content.FileProvider
+import phanna.app.flutter_install_unknown_apk.util.PermissionUtil
+import phanna.app.flutter_install_unknown_apk.config.Plugin
 import java.io.File
 import java.util.*
 import java.util.concurrent.ExecutorService
@@ -21,7 +21,7 @@ import java.util.concurrent.Executors
 
 
 @Suppress("DEPRECATION")
-class Main: Plugin() {
+class DownloadAndInstallPlugin: Plugin() {
     private val permissionUnknownApkRequestCode: Int = 1
     private val permissionRequestCode: Int = 2
     private var url = ""

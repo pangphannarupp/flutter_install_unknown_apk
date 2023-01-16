@@ -1,10 +1,12 @@
 @file:Suppress("DEPRECATION")
 
-package phanna.app.flutter_install_unknown_apk
+package phanna.app.flutter_install_unknown_apk.plugin
 
 import android.app.AlertDialog
 import android.app.ProgressDialog
 import android.content.DialogInterface
+import phanna.app.flutter_install_unknown_apk.util.RUtil
+import phanna.app.flutter_install_unknown_apk.config.Plugin
 import java.util.*
 
 class DialogPlugin: Plugin() {
@@ -75,7 +77,8 @@ class DialogPlugin: Plugin() {
      * @usage used to alert confirm popup
      * */
     private fun alertConfirmMessage(title: String, description: String, onCancel: (() -> Unit)? = null, onConfirm: (() -> Unit)? = null) {
-        val builder: AlertDialog.Builder = AlertDialog.Builder(activity!!, RUtil.getInstance().getType(context!!, "style", "DialogTheme"))
+        val builder: AlertDialog.Builder = AlertDialog.Builder(activity!!, RUtil.getInstance()
+            .getType(context!!, "style", "DialogTheme"))
         builder.setCancelable(false)
         builder.setTitle(title)
         builder.setMessage(description)
@@ -104,7 +107,8 @@ class DialogPlugin: Plugin() {
      * @usage used to alert confirm popup
      * */
     private fun alertMessage(title: String, description: String, onConfirm: (() -> Unit)? = null) {
-        val builder: AlertDialog.Builder = AlertDialog.Builder(activity!!, RUtil.getInstance().getType(context!!, "style", "DialogTheme"))
+        val builder: AlertDialog.Builder = AlertDialog.Builder(activity!!, RUtil.getInstance()
+            .getType(context!!, "style", "DialogTheme"))
         builder.setCancelable(false)
         builder.setTitle(title)
         builder.setMessage(description)
@@ -121,7 +125,8 @@ class DialogPlugin: Plugin() {
 
     private fun alertLoading(message: String) {
         //show loading dialog
-        progressDialog = ProgressDialog(activity!!, RUtil.getInstance().getType(context!!, "style", "DialogTheme"))
+        progressDialog = ProgressDialog(activity!!, RUtil.getInstance()
+            .getType(context!!, "style", "DialogTheme"))
         progressDialog!!.setMessage(message)
         progressDialog!!.setCancelable(false)
         progressDialog!!.show()
