@@ -27,7 +27,7 @@ class DownloadAndInstallPlugin: Plugin() {
     private var url = ""
     private var fileName = ""
     private var checkInstallReady = false
-    private val executor: ExecutorService = Executors.newFixedThreadPool(1)
+    private var executor: ExecutorService = Executors.newFixedThreadPool(1)
     private var progressBarDialog: ProgressDialog? = null
 
     override fun execute(param: Map<String, Any>?) {
@@ -87,6 +87,7 @@ class DownloadAndInstallPlugin: Plugin() {
 
     @SuppressLint("Range", "SetTextI18n")
     private fun download(url: String) {
+        executor = Executors.newFixedThreadPool(1)
         try {
             val filePath: String = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).toString() + "/" + fileName
             val file = File(filePath)
