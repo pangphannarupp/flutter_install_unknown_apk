@@ -22,30 +22,20 @@ import java.util.concurrent.Executors
 
 @Suppress("DEPRECATION")
 class DownloadAndInstallPlugin: Plugin() {
+    private val TAG = "DownloadAndInstallPlugin"
     private val permissionUnknownApkRequestCode: Int = 1
     private val permissionRequestCode: Int = 2
-    private var url = ""
+    //param from client
+    private var param: Map<String, Any>? = null
+
     private var fileName = ""
-    private var checkInstallReady = false
     private var executor: ExecutorService = Executors.newFixedThreadPool(1)
     private var progressBarDialog: ProgressDialog? = null
 
     override fun execute(param: Map<String, Any>?) {
-        url = param!!["url"].toString()
-        fileName = url.substring(url.lastIndexOf('/') + 1, url.length)
-        checkInstallReady = false
-        checkPermission()
-    }
+        this.param = param!!
 
-    fun requestInstallFromUnknownSource() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            if (!context!!.packageManager!!.canRequestPackageInstalls()) {
-                activity!!.startActivityForResult(
-                    Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES)
-                        .setData(Uri.parse(String.format("package:%s", context!!.packageName))), permissionUnknownApkRequestCode
-                )
-            }
-        }
+        checkPermission()
     }
 
     private fun checkPermission() {
@@ -55,12 +45,12 @@ class DownloadAndInstallPlugin: Plugin() {
         )
         val permissionUtil = PermissionUtil(activity!!, listOfPermission, permissionRequestCode)
         if(permissionUtil.checkPermissions()) {
-            download(url)
+            download(param!!)
         }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        if (requestCode == permissionUnknownApkRequestCode && !checkInstallReady){
+        if (requestCode == permissionUnknownApkRequestCode){
             requestInstallAPK()
         }
     }
@@ -75,40 +65,43 @@ class DownloadAndInstallPlugin: Plugin() {
             permissionRequestCode -> {
                 for (result in grantResults) {
                     if (result != PackageManager.PERMISSION_GRANTED) {
-                        //callbackError(0)
+                        callbackError(2)
                         return
                     }
                 }
 
-                download(url)
+                download(param!!)
             }
         }
     }
 
-    @SuppressLint("Range", "SetTextI18n")
-    private fun download(url: String) {
+    @SuppressLint("Range", "SetTextI18n", "LongLogTag")
+    private fun download(param: Map<String, Any>) {
+        val downloadUrl = param["downloadUrl"].toString()
+        val downloadTitle = param["downloadTitle"].toString()
+        fileName = downloadUrl.substring(downloadUrl.lastIndexOf('/') + 1, downloadUrl.length)
         executor = Executors.newFixedThreadPool(1)
         try {
+            //remove old content before downloading new apk
             val filePath: String = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).toString() + "/" + fileName
             val file = File(filePath)
             if (file.exists()) {
                 file.delete()
             }
 
-
+            //show progressbar with download progress
             progressBarDialog = ProgressDialog(activity, ProgressDialog.THEME_HOLO_LIGHT)
-//            progressBarDialog!!.setTitle("Download")
-            progressBarDialog!!.setMessage("Download")
+            progressBarDialog!!.setMessage(downloadTitle)
             progressBarDialog!!.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL)
             progressBarDialog!!.progress = 0
             progressBarDialog!!.setCancelable(false)
             progressBarDialog!!.show()
 
 
-            Log.d("MAIN_DOWNLOAD", "url => $url")
-            Log.d("MAIN_DOWNLOAD", "fileName => $fileName")
+            Log.d(TAG, "url => $downloadUrl")
+            Log.d(TAG, "fileName => $fileName")
             val downloadManager = context!!.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
-            val fileUrl = Uri.parse(url)
+            val fileUrl = Uri.parse(downloadUrl)
             val request = DownloadManager.Request(fileUrl)
             request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_MOBILE or DownloadManager.Request.NETWORK_WIFI)
                 .setMimeType("application/vnd.android.package-archive")
@@ -116,8 +109,8 @@ class DownloadAndInstallPlugin: Plugin() {
                 .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
                 .setTitle(fileName)
                 .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, File.separator + fileName)
-//            downloadManager.enqueue(request)
-//            context!!.registerReceiver(onComplete, IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE))
+            //downloadManager.enqueue(request)
+            //context!!.registerReceiver(onComplete, IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE))
             //Run a task in a background thread to check download progress
             val downloadId = downloadManager.enqueue(request)
             executor.execute {
@@ -136,8 +129,10 @@ class DownloadAndInstallPlugin: Plugin() {
                                         cursor.getLong(cursor.getColumnIndex(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR))
                                     progress = (downloadedBytes * 100 / totalBytes).toInt()
                                 }
+                                Log.d(TAG, "Downloading... $progress%")
                             }
                             DownloadManager.STATUS_SUCCESSFUL -> {
+                                Log.d(TAG, "Download Complete")
                                 progress = 100
                                 isDownloadFinished = true
                                 executor.shutdown()
@@ -158,20 +153,20 @@ class DownloadAndInstallPlugin: Plugin() {
 
         } catch (e: Exception) {
             e.printStackTrace()
-            Log.d("MAIN_DOWNLOAD", "Exception => ${e.printStackTrace()}")
-            //callbackError(0)
+            Log.d(TAG, "Exception => ${e.printStackTrace()}")
+            callbackError(100)
         }
     }
 
-    var onComplete: BroadcastReceiver = object : BroadcastReceiver() {
-        override fun onReceive(ctxt: Context, intent: Intent) {
-            executor.shutdown()
-            mainHandler.removeCallbacksAndMessages(null)
-            progressBarDialog!!.dismiss()
-
-            requestInstallAPK()
-        }
-    }
+//    var onComplete: BroadcastReceiver = object : BroadcastReceiver() {
+//        override fun onReceive(ctxt: Context, intent: Intent) {
+//            executor.shutdown()
+//            mainHandler.removeCallbacksAndMessages(null)
+//            progressBarDialog!!.dismiss()
+//
+//            requestInstallAPK()
+//        }
+//    }
 
     private val mainHandler = Handler(
         Looper.getMainLooper()
@@ -199,7 +194,6 @@ class DownloadAndInstallPlugin: Plugin() {
     }
 
     private fun installAPK() {
-        checkInstallReady = true
         val filePath: String = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS).toString() + "/" + fileName
         val file = File(filePath)
         if (file.exists()) {
@@ -214,7 +208,7 @@ class DownloadAndInstallPlugin: Plugin() {
             intent.setDataAndType(uri, "application/vnd.android.package-archive")
             activity!!.startActivity(intent)
         } else {
-            //callbackError(0)
+            callbackError(3)
         }
     }
 
@@ -239,6 +233,7 @@ class DownloadAndInstallPlugin: Plugin() {
         val errorMessage = when (errorCode) {
             1 -> "Your device not support this feature."
             2 -> "Permission denied."
+            3 -> "File is not exist."
             else -> "Unknown error"
         }
 
@@ -249,17 +244,19 @@ class DownloadAndInstallPlugin: Plugin() {
         callback!!.success(result)
     }
 
-    override fun onPause() {
-        super.onPause()
+    private fun hideProgressbarDialog() {
         if(progressBarDialog != null) {
             progressBarDialog!!.dismiss()
         }
     }
 
+    override fun onPause() {
+        super.onPause()
+        hideProgressbarDialog()
+    }
+
     override fun onDestroy() {
         super.onDestroy()
-        if(progressBarDialog != null) {
-            progressBarDialog!!.dismiss()
-        }
+        hideProgressbarDialog()
     }
 }

@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_install_unknown_apk/flutter_install_unknown_apk.dart';
 import 'package:flutter_install_unknown_apk/service/api.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert' as convert;
 
 class MoreApplication extends StatefulWidget {
-  const MoreApplication({Key? key}) : super(key: key);
+  const MoreApplication({Key? key, required this.screenTitle, required this.description, required this.downloadTitle, required this.api}) : super(key: key);
+
+  final String api;
+  final String screenTitle;
+  final String description;
+  final String downloadTitle;
 
   @override
   State<MoreApplication> createState() => _MoreApplicationState();
@@ -17,7 +20,7 @@ class _MoreApplicationState extends State<MoreApplication> {
   List<dynamic> data = [];
 
   void getData() async {
-    var jsonResponse = await FlutterInstallUnknownApkApi().getAll();
+    var jsonResponse = await FlutterInstallUnknownApkApi(api: widget.api).getAll();
     setState(() {
       data = jsonResponse;
       data.shuffle();
@@ -26,7 +29,8 @@ class _MoreApplicationState extends State<MoreApplication> {
 
   void downloadAndInstall({required String url}) {
     plugin.execute('DOWNLOAD_AND_INSTALL_PLUGIN', {
-      'url': url
+      'downloadUrl': url,
+      'downloadTitle': widget.downloadTitle
     });
   }
 
@@ -41,7 +45,7 @@ class _MoreApplicationState extends State<MoreApplication> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('More Application'),
+        title: Text(widget.screenTitle),
         elevation: 0,
         actions: [
           IconButton(onPressed: () {
@@ -59,13 +63,6 @@ class _MoreApplicationState extends State<MoreApplication> {
             children: [
               index == 0 ? const Divider() : const SizedBox(),
               ListTile(
-                onTap: () {
-                  downloadAndInstall(url: data[index]['app_url']);
-                },
-                // leading: Padding(
-                //   padding: const EdgeInsets.all(8),
-                //   child: Image.network(data[index]['app_icon']),
-                // ),
                 title: Row(
                   children: [
                     Image.network(data[index]['app_icon'], width: 35, height: 35,),
@@ -79,22 +76,26 @@ class _MoreApplicationState extends State<MoreApplication> {
                       padding: const EdgeInsets.only(top: 10, bottom: 10),
                       child: Image.network(data[index]['app_thumbnail']),
                     ),
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).primaryColor,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: const Center(
-                        child: Text('Download & Install',
-                        style: TextStyle(
-                          color: Colors.white
-                        ),),
+                    GestureDetector(
+                      onTap: () {
+                        downloadAndInstall(url: data[index]['app_url']);
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).primaryColor,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Center(
+                          child: Text(widget.description,
+                            style: const TextStyle(
+                                color: Colors.white
+                            ),),
+                        ),
                       ),
                     )
                   ],
                 ),
-                // trailing: const Icon(Icons.save_alt),
               ),
               const Divider(),
             ],
