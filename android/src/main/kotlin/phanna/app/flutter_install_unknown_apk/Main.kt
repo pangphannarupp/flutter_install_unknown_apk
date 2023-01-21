@@ -166,10 +166,6 @@ class Main: Plugin() {
         override fun onReceive(ctxt: Context, intent: Intent) {
             executor.shutdown()
             mainHandler.removeCallbacksAndMessages(null)
-//            val param = mutableMapOf<String, Any>()
-//            param["type"] = "hide_loading"
-//            dialogPlugin.execute(param)
-
             progressBarDialog!!.dismiss()
 
             requestInstallAPK()
@@ -250,5 +246,15 @@ class Main: Plugin() {
         result["errorCode"] = errorCode
         result["errorMessage"] = errorMessage
         callback!!.success(result)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        progressBarDialog!!.dismiss()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        progressBarDialog!!.dismiss()
     }
 }

@@ -65,6 +65,14 @@ class _MyAppState extends State<MyApp> {
               leading: const Icon(Icons.android_outlined),
               title: const Text('លំហាត់ថ្នាក់ទី១២'),
               trailing: const Icon(Icons.save_alt),
+            ),
+            ListTile(
+              onTap: () {
+                downloadAndInstallApk(url: 'https://raw.githubusercontent.com/pangphannarupp/appstore/main/apk/test.apk');
+              },
+              leading: const Icon(Icons.android_outlined),
+              title: const Text('Test'),
+              trailing: const Icon(Icons.save_alt),
             )
           ],
         ),
