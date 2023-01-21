@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_install_unknown_apk/flutter_install_unknown_apk.dart';
 import 'package:flutter_install_unknown_apk/screen/more_application.dart';
-import 'package:flutter_install_unknown_apk/service/api.dart';
+import 'package:flutter_install_unknown_apk/application.dart';
 
 void main() {
   runApp(const MyApp());
@@ -15,7 +14,6 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  final plugin = FlutterInstallUnknownApk();
 
   @override
   void initState() {
@@ -24,23 +22,11 @@ class _MyAppState extends State<MyApp> {
     super.initState();
   }
 
-  void downloadAndInstallApk({required String url}) {
-    plugin.execute('DOWNLOAD_AND_INSTALL_PLUGIN', {
-      'url': url
-    });
-  }
-
   void checkAppUpdate() async {
-    var result = await plugin.execute('APPLICATION_PLUGIN', {
-      'type': 'app_info',
-    });
-    //print('app info => $result');
-    var appInfo = await FlutterInstallUnknownApkApi().getByAppId(result['packageName']);
-    //print('appInfo => $appInfo');
-    var canUpdate = await FlutterInstallUnknownApkApi().canUpdate(result);
-    print('canUpdate => $canUpdate');
+    var application = Application();
+    var canUpdate = await application.canUpdate();
     if(canUpdate) {
-      downloadAndInstallApk(url: appInfo['app_url'].toString());
+      application.update();
     }
   }
 
