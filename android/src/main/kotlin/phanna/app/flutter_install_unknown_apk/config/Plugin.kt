@@ -1,4 +1,4 @@
-package phanna.app.flutter_install_unknown_apk
+package phanna.app.flutter_install_unknown_apk.config
 
 import android.app.Activity
 import android.content.Context

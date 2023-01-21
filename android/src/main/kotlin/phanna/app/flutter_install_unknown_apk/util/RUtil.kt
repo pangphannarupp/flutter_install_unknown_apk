@@ -1,8 +1,6 @@
-package phanna.app.flutter_install_unknown_apk
+package phanna.app.flutter_install_unknown_apk.util
 
 import android.content.Context
-import android.os.Build
-import androidx.annotation.RequiresApi
 
 class RUtil {
 

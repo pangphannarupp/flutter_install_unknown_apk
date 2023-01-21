@@ -19,6 +19,8 @@ import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
 import io.flutter.plugin.common.PluginRegistry
+import phanna.app.flutter_install_unknown_apk.config.Plugin
+import phanna.app.flutter_install_unknown_apk.config.pluginList
 
 /** FlutterInstallUnknownApkPlugin */
 class FlutterInstallUnknownApkPlugin: FlutterPlugin, MethodCallHandler, ActivityAware, PluginRegistry.ActivityResultListener, PluginRegistry.RequestPermissionsResultListener,
@@ -50,12 +52,16 @@ class FlutterInstallUnknownApkPlugin: FlutterPlugin, MethodCallHandler, Activity
       param = args["param"] as Map<String, Any>
     }
 
-    if(call.method == "DOWNLOAD") {
-      plugin = Main()
-      plugin!!.context = context
-      plugin!!.activity = activity
-      plugin!!.execute(param)
+    for(i in pluginList.indices) {
+      if(call.method == pluginList[i].pluginKey) {
+        plugin = pluginList[i].pluginClass
+        plugin!!.context = context
+        plugin!!.activity = activity
+        plugin!!.callback = result
+        plugin!!.execute(param)
+      }
     }
+
     //add lifecycle
     ProcessLifecycleOwner.get().lifecycle.addObserver(this)
   }
