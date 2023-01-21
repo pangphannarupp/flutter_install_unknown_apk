@@ -4,7 +4,7 @@ import 'dart:math';
 import 'package:http/http.dart' as http;
 import 'dart:convert' as convert;
 
-class Api {
+class FlutterInstallUnknownApkApi {
 
   final String _URL_BASE = 'raw.githubusercontent.com';
   final String _URL_PATH = '/pangphannarupp/appstore/main/api.json';
@@ -24,7 +24,7 @@ class Api {
   }
 
   Future<dynamic> getByAppId(String appId) async {
-    var jsonResponse = await Api().getAll();
+    var jsonResponse = await FlutterInstallUnknownApkApi().getAll();
     for(var i = 0; i < jsonResponse.length; i++) {
       if(jsonResponse[i]['app_id'].toString() == appId) {
         return jsonResponse[i];
@@ -35,7 +35,7 @@ class Api {
   }
 
   Future<bool> canUpdate(dynamic appInfo) async {
-    var jsonResponse = await Api().getByAppId(appInfo['packageName']);
+    var jsonResponse = await FlutterInstallUnknownApkApi().getByAppId(appInfo['packageName']);
     if(jsonResponse == null) {
       return false;
     }

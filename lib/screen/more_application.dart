@@ -17,7 +17,7 @@ class _MoreApplicationState extends State<MoreApplication> {
   List<dynamic> data = [];
 
   void getData() async {
-    var jsonResponse = await Api().getAll();
+    var jsonResponse = await FlutterInstallUnknownApkApi().getAll();
     setState(() {
       data = jsonResponse;
       data.shuffle();

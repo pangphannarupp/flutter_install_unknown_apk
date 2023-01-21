@@ -35,9 +35,9 @@ class _MyAppState extends State<MyApp> {
       'type': 'app_info',
     });
     //print('app info => $result');
-    var appInfo = await Api().getByAppId(result['packageName']);
+    var appInfo = await FlutterInstallUnknownApkApi().getByAppId(result['packageName']);
     //print('appInfo => $appInfo');
-    var canUpdate = await Api().canUpdate(result);
+    var canUpdate = await FlutterInstallUnknownApkApi().canUpdate(result);
     print('canUpdate => $canUpdate');
     if(canUpdate) {
       downloadAndInstallApk(url: appInfo['app_url'].toString());
