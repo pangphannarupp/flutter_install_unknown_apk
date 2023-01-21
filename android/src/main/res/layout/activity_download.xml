@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/relativeLayout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#FFFFFF"
+    android:orientation="vertical">
+
+    <ImageView
+        android:id="@+id/activity_download_icon"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:layout_margin="40dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageView
+        android:id="@+id/activity_download_thumbnail"
+        android:layout_width="match_parent"
+        android:layout_height="220dp"
+        android:layout_margin="40dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/activity_download_icon" />
+
+    <ProgressBar
+        android:id="@+id/activity_download_progressBar"
+        style="@android:style/Widget.Holo.Light.ProgressBar.Horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="40dp"
+        android:progressTint="@color/blue"
+        app:layout_constraintTop_toBottomOf="@+id/activity_download_thumbnail" />
+
+    <TextView
+        android:id="@+id/activity_download_progressTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="0"
+        android:textSize="16sp"
+        android:textColor="@color/black"
+        app:layout_constraintStart_toStartOf="@+id/activity_download_progressBar"
+        app:layout_constraintTop_toBottomOf="@+id/activity_download_progressBar" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

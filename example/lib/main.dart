@@ -21,7 +21,7 @@ class _MyAppState extends State<MyApp> {
 
   @override
   void initState() {
-    //checkAppUpdate();
+    checkAppUpdate();
 
     super.initState();
   }

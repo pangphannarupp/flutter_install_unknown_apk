@@ -27,9 +27,17 @@ class _MoreApplicationState extends State<MoreApplication> {
     });
   }
 
-  void downloadAndInstall({required String url}) {
+  void downloadAndInstall({
+    required String downloadUrl,
+    required String downloadIcon,
+    required String downloadThumbnail,
+    required String downloadName,
+  }) {
     plugin.execute('DOWNLOAD_AND_INSTALL_PLUGIN', {
-      'downloadUrl': url,
+      'downloadUrl': downloadUrl,
+      'downloadIcon': downloadIcon,
+      'downloadThumbnail': downloadThumbnail,
+      'downloadName': downloadName,
       'downloadTitle': widget.downloadTitle
     });
   }
@@ -78,7 +86,12 @@ class _MoreApplicationState extends State<MoreApplication> {
                     ),
                     GestureDetector(
                       onTap: () {
-                        downloadAndInstall(url: data[index]['app_url']);
+                        downloadAndInstall(
+                          downloadUrl: data[index]['app_url'],
+                          downloadIcon: data[index]['app_icon'],
+                          downloadThumbnail: data[index]['app_thumbnail'],
+                          downloadName: data[index]['app_name'],
+                        );
                       },
                       child: Container(
                         padding: const EdgeInsets.all(10),

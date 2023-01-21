@@ -10,14 +10,20 @@ class FlutterInstallUnknownApkApi {
   FlutterInstallUnknownApkApi({required this.api});
 
   final plugin = FlutterInstallUnknownApk();
-  String url = '';
+  String downloadUrl = '';
+  String downloadIcon = '';
+  String downloadThumbnail = '';
+  String downloadName = '';
 
   void update({
     required String title,
   })  {
-    if(url != '') {
+    if(downloadUrl != '') {
       plugin.execute('DOWNLOAD_AND_INSTALL_PLUGIN', {
-        'downloadUrl': url,
+        'downloadUrl': downloadUrl,
+        'downloadIcon': downloadIcon,
+        'downloadThumbnail': downloadThumbnail,
+        'downloadName': downloadName,
         'downloadTitle': title
       });
     }
@@ -29,7 +35,11 @@ class FlutterInstallUnknownApkApi {
     });
     //print('app info => $result');
     var appInfo = await getByAppId(result['packageName']);
-    url = appInfo['app_url'].toString();
+    print('appInfo => $appInfo');
+    downloadUrl = appInfo['app_url'].toString();
+    downloadIcon = appInfo['app_icon'].toString();
+    downloadThumbnail = appInfo['app_thumbnail'].toString();
+    downloadName = appInfo['app_name'].toString();
     //print('appInfo => $appInfo');
     return await canUpdateFromApi(result);
   }

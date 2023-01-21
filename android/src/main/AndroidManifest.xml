@@ -15,6 +15,12 @@
         android:requestLegacyExternalStorage="true"
         >
 
+        <activity
+            android:name=".view.DownloadActivity"
+            android:configChanges="orientation|keyboard|keyboardHidden|screenSize"
+            android:launchMode="singleInstance"
+            android:theme="@android:style/Theme.Light.NoTitleBar"></activity>
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"

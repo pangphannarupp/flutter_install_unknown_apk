@@ -1,62 +1,70 @@
-package phanna.app.flutter_install_unknown_apk.plugin
+package phanna.app.flutter_install_unknown_apk.view
 
-import android.Manifest
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.app.DownloadManager
 import android.app.ProgressDialog
-import android.content.*
-import android.content.pm.PackageManager
+import android.content.Context
+import android.content.Intent
 import android.database.Cursor
 import android.net.Uri
 import android.os.*
 import android.provider.Settings
 import android.util.Log
+import android.widget.ImageView
+import android.widget.ProgressBar
+import android.widget.TextView
 import androidx.core.content.FileProvider
-import org.json.JSONArray
-import org.json.JSONObject
-import phanna.app.flutter_install_unknown_apk.util.PermissionUtil
-import phanna.app.flutter_install_unknown_apk.config.Plugin
-import phanna.app.flutter_install_unknown_apk.view.DownloadActivity
+import com.bumptech.glide.Glide
+import com.squareup.picasso.Picasso
+import phanna.app.flutter_install_unknown_apk.util.RUtil
 import java.io.File
-import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
-
-@Suppress("DEPRECATION")
-class DownloadAndInstallPlugin: Plugin() {
-    private val TAG = "DownloadAndInstallPlugin"
+class DownloadActivity: Activity() {
+    private val TAG = "DownloadActivity"
     private val permissionUnknownApkRequestCode: Int = 1
-    private val permissionRequestCode: Int = 2
     //param from client
-    private var param: Map<String, Any>? = null
+    private var downloadUrl: String? = null
+    private var downloadIcon: String? = null
+    private var downloadThumbnail: String? = null
+    private var downloadName: String? = null
+    private var downloadTitle: String? = null
 
     private var fileName = ""
     private var executor: ExecutorService = Executors.newFixedThreadPool(1)
     private var progressBarDialog: ProgressDialog? = null
 
-    override fun execute(param: Map<String, Any>?) {
-        this.param = param!!
+    private var progressBarDownload: ProgressBar? = null
+    private var progressBarTitle: TextView? = null
+    private var appIcon: ImageView? = null
+    private var appThumbnail: ImageView? = null
 
-        checkPermission()
-    }
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(RUtil.getInstance().getLayout(this, "activity_download"))
 
-    private fun checkPermission() {
-        val listOfPermission = arrayListOf(
-            Manifest.permission.READ_EXTERNAL_STORAGE,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE,
-        )
-        val permissionUtil = PermissionUtil(activity!!, listOfPermission, permissionRequestCode)
-        if(permissionUtil.checkPermissions()) {
-//            download(param!!)
-            val intent = Intent(context!!, DownloadActivity::class.java)
-            intent.putExtra("downloadUrl", param!!["downloadUrl"].toString())
-            intent.putExtra("downloadIcon", param!!["downloadIcon"].toString())
-            intent.putExtra("downloadThumbnail", param!!["downloadThumbnail"].toString())
-            intent.putExtra("downloadName", param!!["downloadName"].toString())
-            intent.putExtra("downloadTitle", param!!["downloadTitle"].toString())
-            activity!!.startActivity(intent)
-        }
+        progressBarDownload = findViewById(RUtil.getInstance().getId(this, "activity_download_progressBar"))
+        progressBarTitle = findViewById(RUtil.getInstance().getId(this, "activity_download_progressTitle"))
+        appIcon = findViewById(RUtil.getInstance().getId(this, "activity_download_icon"))
+        appThumbnail = findViewById(RUtil.getInstance().getId(this, "activity_download_thumbnail"))
+
+
+        //get data from MP3PlayerPlugin
+        val intent = intent
+        downloadUrl = intent.getStringExtra("downloadUrl")
+        downloadIcon = intent.getStringExtra("downloadIcon")
+        downloadThumbnail = intent.getStringExtra("downloadThumbnail")
+        downloadName = intent.getStringExtra("downloadName")
+        downloadTitle = intent.getStringExtra("downloadTitle")
+
+        Picasso.get().load(downloadIcon).into(appIcon!!)
+        Picasso.get().load(downloadThumbnail).into(appThumbnail!!)
+//        Glide.with(this).load(downloadIcon).into(appIcon!!)
+//        Glide.with(this).load(downloadThumbnail).into(appThumbnail!!)
+
+        download(downloadUrl!!)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -65,30 +73,8 @@ class DownloadAndInstallPlugin: Plugin() {
         }
     }
 
-    @SuppressLint("LongLogTag")
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        when (requestCode) {
-            permissionRequestCode -> {
-                for (result in grantResults) {
-                    if (result != PackageManager.PERMISSION_GRANTED) {
-                        callbackError(2)
-                        return
-                    }
-                }
-
-                download(param!!)
-            }
-        }
-    }
-
     @SuppressLint("Range", "SetTextI18n", "LongLogTag")
-    private fun download(param: Map<String, Any>) {
-        val downloadUrl = param["downloadUrl"].toString()
-        val downloadTitle = param["downloadTitle"].toString()
+    private fun download(downloadUrl: String) {
         fileName = downloadUrl.substring(downloadUrl.lastIndexOf('/') + 1, downloadUrl.length)
         executor = Executors.newFixedThreadPool(1)
         try {
@@ -100,17 +86,12 @@ class DownloadAndInstallPlugin: Plugin() {
             }
 
             //show progressbar with download progress
-            progressBarDialog = ProgressDialog(activity, ProgressDialog.THEME_HOLO_LIGHT)
-            progressBarDialog!!.setMessage(downloadTitle)
-            progressBarDialog!!.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL)
-            progressBarDialog!!.progress = 0
-            progressBarDialog!!.setCancelable(false)
-            progressBarDialog!!.show()
+            progressBarDownload!!.progress = 0
 
 
             Log.d(TAG, "url => $downloadUrl")
             Log.d(TAG, "fileName => $fileName")
-            val downloadManager = context!!.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+            val downloadManager = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
             val fileUrl = Uri.parse(downloadUrl)
             val request = DownloadManager.Request(fileUrl)
             request.setAllowedNetworkTypes(DownloadManager.Request.NETWORK_MOBILE or DownloadManager.Request.NETWORK_WIFI)
@@ -147,7 +128,8 @@ class DownloadAndInstallPlugin: Plugin() {
                                 isDownloadFinished = true
                                 executor.shutdown()
                                 mainHandler.removeCallbacksAndMessages(null)
-                                progressBarDialog!!.dismiss()
+//                                progressBarDialog!!.dismiss()
+                                finish()
                                 requestInstallAPK()
                             }
                             DownloadManager.STATUS_PAUSED, DownloadManager.STATUS_PENDING -> {}
@@ -164,7 +146,7 @@ class DownloadAndInstallPlugin: Plugin() {
         } catch (e: Exception) {
             e.printStackTrace()
             Log.d(TAG, "Exception => ${e.printStackTrace()}")
-            callbackError(100)
+            //callbackError(100)
         }
     }
 
@@ -178,22 +160,25 @@ class DownloadAndInstallPlugin: Plugin() {
 //        }
 //    }
 
+    @SuppressLint("SetTextI18n")
     private val mainHandler = Handler(
         Looper.getMainLooper()
     ) { msg ->
         if (msg.what == 1) {
             val downloadProgress = msg.arg1
-            progressBarDialog!!.progress = downloadProgress
+//            progressBarDialog!!.progress = downloadProgress
+            progressBarDownload!!.progress = downloadProgress
+            progressBarTitle!!.text = "$downloadTitle $downloadProgress%"
         }
         true
     }
 
     private fun requestInstallAPK() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            if (!context!!.packageManager!!.canRequestPackageInstalls()) {
-                activity!!.startActivityForResult(
+            if (!packageManager!!.canRequestPackageInstalls()) {
+                startActivityForResult(
                     Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES)
-                        .setData(Uri.parse(String.format("package:%s", context!!.packageName))), permissionUnknownApkRequestCode
+                        .setData(Uri.parse(String.format("package:%s", packageName))), permissionUnknownApkRequestCode
                 )
             } else {
                 installAPK()
@@ -211,48 +196,17 @@ class DownloadAndInstallPlugin: Plugin() {
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             var uri = Uri.fromFile(file)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                uri = FileProvider.getUriForFile(activity!!, activity!!.packageName + ".fileprovider", file)
+                uri = FileProvider.getUriForFile(this, "$packageName.fileprovider", file)
                 intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
             }
             intent.setDataAndType(uri, "application/vnd.android.package-archive")
-            activity!!.startActivity(intent)
+            startActivity(intent)
         } else {
-            callbackError(3)
+            //callbackError(3)
         }
     }
 
-    /**
-     * response success to flutter client
-     * {result: true, file_path: String}
-     * @param filePath
-     */
-    private fun callbackSuccess(filePath: String) {
-        val result: MutableMap<String, Any> = mutableMapOf()
-        result["result"] = true
-        result["file_path"] = filePath
-        callback!!.success(result)
-    }
-
-    /**
-     * response fail to flutter client
-     * {result: false, errorCode: Int, errorCode: String}
-     * @param errorCode
-     */
-    private fun callbackError(errorCode: Int) {
-        val errorMessage = when (errorCode) {
-            1 -> "Your device not support this feature."
-            2 -> "Permission denied."
-            3 -> "File is not exist."
-            else -> "Unknown error"
-        }
-
-        val result: MutableMap<String, Any> = mutableMapOf()
-        result["result"] = false
-        result["errorCode"] = errorCode
-        result["errorMessage"] = errorMessage
-        callback!!.success(result)
-    }
 
     private fun hideProgressbarDialog() {
         if(progressBarDialog != null) {
@@ -268,5 +222,9 @@ class DownloadAndInstallPlugin: Plugin() {
     override fun onDestroy() {
         super.onDestroy()
         hideProgressbarDialog()
+    }
+
+    override fun onBackPressed() {
+
     }
 }
