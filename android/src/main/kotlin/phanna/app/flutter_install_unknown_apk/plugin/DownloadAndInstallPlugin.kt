@@ -251,11 +251,15 @@ class DownloadAndInstallPlugin: Plugin() {
 
     override fun onPause() {
         super.onPause()
-        progressBarDialog!!.dismiss()
+        if(progressBarDialog != null) {
+            progressBarDialog!!.dismiss()
+        }
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        progressBarDialog!!.dismiss()
+        if(progressBarDialog != null) {
+            progressBarDialog!!.dismiss()
+        }
     }
 }
