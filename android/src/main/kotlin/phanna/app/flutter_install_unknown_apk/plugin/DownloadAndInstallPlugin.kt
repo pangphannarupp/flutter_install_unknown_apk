@@ -12,11 +12,9 @@ import android.os.*
 import android.provider.Settings
 import android.util.Log
 import androidx.core.content.FileProvider
-import org.json.JSONArray
-import org.json.JSONObject
 import phanna.app.flutter_install_unknown_apk.util.PermissionUtil
 import phanna.app.flutter_install_unknown_apk.config.Plugin
-import phanna.app.flutter_install_unknown_apk.view.DownloadActivity
+import phanna.app.flutter_install_unknown_apk.view.download.DownloadActivity
 import java.io.File
 import java.util.*
 import java.util.concurrent.ExecutorService

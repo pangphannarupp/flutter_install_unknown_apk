@@ -1,4 +1,4 @@
-package phanna.app.flutter_install_unknown_apk.view
+package phanna.app.flutter_install_unknown_apk.view.download
 
 import android.annotation.SuppressLint
 import android.app.Activity
@@ -15,7 +15,6 @@ import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.TextView
 import androidx.core.content.FileProvider
-import com.bumptech.glide.Glide
 import com.squareup.picasso.Picasso
 import phanna.app.flutter_install_unknown_apk.util.RUtil
 import java.io.File
@@ -40,6 +39,7 @@ class DownloadActivity: Activity() {
     private var progressBarTitle: TextView? = null
     private var appIcon: ImageView? = null
     private var appThumbnail: ImageView? = null
+    private var appName: TextView? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,6 +49,7 @@ class DownloadActivity: Activity() {
         progressBarTitle = findViewById(RUtil.getInstance().getId(this, "activity_download_progressTitle"))
         appIcon = findViewById(RUtil.getInstance().getId(this, "activity_download_icon"))
         appThumbnail = findViewById(RUtil.getInstance().getId(this, "activity_download_thumbnail"))
+        appName = findViewById(RUtil.getInstance().getId(this, "activity_download_appName"))
 
 
         //get data from MP3PlayerPlugin
@@ -61,6 +62,7 @@ class DownloadActivity: Activity() {
 
         Picasso.get().load(downloadIcon).into(appIcon!!)
         Picasso.get().load(downloadThumbnail).into(appThumbnail!!)
+        appName!!.text = downloadName
 //        Glide.with(this).load(downloadIcon).into(appIcon!!)
 //        Glide.with(this).load(downloadThumbnail).into(appThumbnail!!)
 
