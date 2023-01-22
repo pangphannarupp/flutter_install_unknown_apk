@@ -5,6 +5,7 @@
     android:id="@+id/relativeLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:padding="40dp"
     android:background="#FFFFFF"
     android:orientation="vertical">
 
@@ -12,15 +13,13 @@
         android:id="@+id/activity_download_icon"
         android:layout_width="60dp"
         android:layout_height="60dp"
-        android:layout_margin="40dp"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <ImageView
         android:id="@+id/activity_download_thumbnail"
         android:layout_width="match_parent"
         android:layout_height="220dp"
-        android:layout_margin="40dp"
         android:visibility="gone"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/activity_download_icon" />
@@ -29,7 +28,7 @@
         android:id="@+id/activity_download_progressTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="0"
+        android:text="Downloading 0%"
         android:textSize="16sp"
         android:textColor="@color/black"
         android:layout_marginBottom="5dp"
@@ -41,9 +40,7 @@
         style="@android:style/Widget.Holo.Light.ProgressBar.Horizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="40dp"
-        android:layout_marginBottom="40dp"
-        android:layout_marginRight="120dp"
+        android:layout_marginRight="80dp"
         android:progressTint="@color/blue"
         app:layout_constraintBottom_toBottomOf="parent" />
 
