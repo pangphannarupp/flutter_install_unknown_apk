@@ -60,3 +60,15 @@ Navigator.push(
     )),
 );
 ```
+
+## Data
+```json
+{
+    "app_name": "Application Name",
+    "app_id": "com.app.name",
+    "app_version": "1.0.0",
+    "app_url": "com.app.name.1.0.0.apk",
+    "app_icon": "com.app.name.icon.png",
+    "app_thumbnail": "com.app.name.thumbnail.png"
+}
+```
