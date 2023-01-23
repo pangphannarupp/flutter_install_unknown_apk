@@ -46,8 +46,8 @@ class DownloadAndInstallPlugin: Plugin() {
         )
         val permissionUtil = PermissionUtil(activity!!, listOfPermission, permissionRequestCode)
         if(permissionUtil.checkPermissions()) {
-//            download(param!!)
-            openDownloadActivity()
+            download(param!!)
+//            openDownloadActivity()
         }
     }
 
@@ -82,8 +82,8 @@ class DownloadAndInstallPlugin: Plugin() {
                     }
                 }
 
-//                download(param!!)
-                openDownloadActivity()
+                download(param!!)
+//                openDownloadActivity()
             }
         }
     }
@@ -110,7 +110,6 @@ class DownloadAndInstallPlugin: Plugin() {
             progressBarDialog!!.setCancelable(false)
             progressBarDialog!!.show()
 
-
             Log.d(TAG, "url => $downloadUrl")
             Log.d(TAG, "fileName => $fileName")
             val downloadManager = context!!.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
@@ -122,44 +121,49 @@ class DownloadAndInstallPlugin: Plugin() {
                 .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
                 .setTitle(fileName)
                 .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, File.separator + fileName)
-            //downloadManager.enqueue(request)
-            //context!!.registerReceiver(onComplete, IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE))
+//            downloadManager.enqueue(request)
+//            context!!.registerReceiver(onComplete, IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE))
             //Run a task in a background thread to check download progress
             val downloadId = downloadManager.enqueue(request)
             executor.execute {
                 var progress = 0
                 var isDownloadFinished = false
                 while (!isDownloadFinished) {
-                    val cursor: Cursor =
-                        downloadManager.query(DownloadManager.Query().setFilterById(downloadId))
-                    if (cursor.moveToFirst()) {
-                        when (cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_STATUS))) {
-                            DownloadManager.STATUS_RUNNING -> {
-                                val totalBytes: Long =
-                                    cursor.getLong(cursor.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES))
-                                if (totalBytes > 0) {
-                                    val downloadedBytes: Long =
-                                        cursor.getLong(cursor.getColumnIndex(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR))
-                                    progress = (downloadedBytes * 100 / totalBytes).toInt()
+                    try {
+                        val cursor: Cursor =
+                            downloadManager.query(DownloadManager.Query().setFilterById(downloadId))
+                        if (cursor.moveToFirst()) {
+                            when (cursor.getInt(cursor.getColumnIndex(DownloadManager.COLUMN_STATUS))) {
+                                DownloadManager.STATUS_RUNNING -> {
+                                    val totalBytes: Long =
+                                        cursor.getLong(cursor.getColumnIndex(DownloadManager.COLUMN_TOTAL_SIZE_BYTES))
+                                    if (totalBytes > 0) {
+                                        val downloadedBytes: Long =
+                                            cursor.getLong(cursor.getColumnIndex(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR))
+                                        progress = (downloadedBytes * 100 / totalBytes).toInt()
+                                    }
+                                    Log.d(TAG, "Downloading... $progress%")
                                 }
-                                Log.d(TAG, "Downloading... $progress%")
+                                DownloadManager.STATUS_SUCCESSFUL -> {
+                                    Log.d(TAG, "Download Complete")
+                                    progress = 100
+                                    isDownloadFinished = true
+                                    executor.shutdown()
+                                    mainHandler.removeCallbacksAndMessages(null)
+                                    progressBarDialog!!.dismiss()
+                                    requestInstallAPK()
+                                }
+                                DownloadManager.STATUS_PAUSED, DownloadManager.STATUS_PENDING -> {}
+                                DownloadManager.STATUS_FAILED -> isDownloadFinished = true
                             }
-                            DownloadManager.STATUS_SUCCESSFUL -> {
-                                Log.d(TAG, "Download Complete")
-                                progress = 100
-                                isDownloadFinished = true
-                                executor.shutdown()
-                                mainHandler.removeCallbacksAndMessages(null)
-                                progressBarDialog!!.dismiss()
-                                requestInstallAPK()
-                            }
-                            DownloadManager.STATUS_PAUSED, DownloadManager.STATUS_PENDING -> {}
-                            DownloadManager.STATUS_FAILED -> isDownloadFinished = true
+                            val message: Message = Message.obtain()
+                            message.what = 1
+                            message.arg1 = progress
+                            mainHandler.sendMessage(message)
                         }
-                        val message: Message = Message.obtain()
-                        message.what = 1
-                        message.arg1 = progress
-                        mainHandler.sendMessage(message)
+                    } catch (e: NullPointerException) {
+                        Log.d(TAG, "Exception => ${e.printStackTrace()}")
+                        Log.d(TAG, "Exception progress => $progress")
                     }
                 }
             }
@@ -171,15 +175,20 @@ class DownloadAndInstallPlugin: Plugin() {
         }
     }
 
-//    var onComplete: BroadcastReceiver = object : BroadcastReceiver() {
-//        override fun onReceive(ctxt: Context, intent: Intent) {
-//            executor.shutdown()
-//            mainHandler.removeCallbacksAndMessages(null)
-//            progressBarDialog!!.dismiss()
-//
-//            requestInstallAPK()
-//        }
-//    }
+    var onComplete: BroadcastReceiver = object : BroadcastReceiver() {
+        override fun onReceive(ctxt: Context, intent: Intent) {
+            executor.shutdown()
+            mainHandler.removeCallbacksAndMessages(null)
+            progressBarDialog!!.dismiss()
+            unRegisterOnComplete()
+
+            requestInstallAPK()
+        }
+    }
+
+    private fun unRegisterOnComplete() {
+        context!!.unregisterReceiver(onComplete)
+    }
 
     private val mainHandler = Handler(
         Looper.getMainLooper()
@@ -220,16 +229,15 @@ class DownloadAndInstallPlugin: Plugin() {
             }
             intent.setDataAndType(uri, "application/vnd.android.package-archive")
             activity!!.startActivity(intent)
+
+            if (param!!["isUpdate"] as Boolean) {
+                activity!!.finish()
+            }
         } else {
             callbackError(3)
         }
     }
 
-    /**
-     * response success to flutter client
-     * {result: true, file_path: String}
-     * @param filePath
-     */
     private fun callbackSuccess(filePath: String) {
         val result: MutableMap<String, Any> = mutableMapOf()
         result["result"] = true
