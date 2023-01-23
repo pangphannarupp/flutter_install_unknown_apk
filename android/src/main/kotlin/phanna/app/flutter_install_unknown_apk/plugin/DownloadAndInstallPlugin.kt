@@ -47,14 +47,18 @@ class DownloadAndInstallPlugin: Plugin() {
         val permissionUtil = PermissionUtil(activity!!, listOfPermission, permissionRequestCode)
         if(permissionUtil.checkPermissions()) {
 //            download(param!!)
-            val intent = Intent(context!!, DownloadActivity::class.java)
-            intent.putExtra("downloadUrl", param!!["downloadUrl"].toString())
-            intent.putExtra("downloadIcon", param!!["downloadIcon"].toString())
-            intent.putExtra("downloadThumbnail", param!!["downloadThumbnail"].toString())
-            intent.putExtra("downloadName", param!!["downloadName"].toString())
-            intent.putExtra("downloadTitle", param!!["downloadTitle"].toString())
-            activity!!.startActivity(intent)
+            openDownloadActivity()
         }
+    }
+
+    private fun openDownloadActivity() {
+        val intent = Intent(context!!, DownloadActivity::class.java)
+        intent.putExtra("downloadUrl", param!!["downloadUrl"].toString())
+        intent.putExtra("downloadIcon", param!!["downloadIcon"].toString())
+        intent.putExtra("downloadThumbnail", param!!["downloadThumbnail"].toString())
+        intent.putExtra("downloadName", param!!["downloadName"].toString())
+        intent.putExtra("downloadTitle", param!!["downloadTitle"].toString())
+        activity!!.startActivity(intent)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -78,7 +82,8 @@ class DownloadAndInstallPlugin: Plugin() {
                     }
                 }
 
-                download(param!!)
+//                download(param!!)
+                openDownloadActivity()
             }
         }
     }

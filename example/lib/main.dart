@@ -31,7 +31,7 @@ class _MyAppState extends State<MyApp> {
     var canUpdate = await application.canUpdate();
     if(canUpdate) {
       application.update(
-        title: 'កំពុងធ្វើបច្ចុប្បន្នភាព... '
+          title: 'កំពុងធ្វើបច្ចុប្បន្នភាព... '
       );
     }
   }
