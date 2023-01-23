@@ -58,6 +58,7 @@ class DownloadAndInstallPlugin: Plugin() {
         intent.putExtra("downloadThumbnail", param!!["downloadThumbnail"].toString())
         intent.putExtra("downloadName", param!!["downloadName"].toString())
         intent.putExtra("downloadTitle", param!!["downloadTitle"].toString())
+        intent.putExtra("isUpdate", param!!["isUpdate"] as Boolean)
         activity!!.startActivity(intent)
     }
 
@@ -175,20 +176,20 @@ class DownloadAndInstallPlugin: Plugin() {
         }
     }
 
-    var onComplete: BroadcastReceiver = object : BroadcastReceiver() {
-        override fun onReceive(ctxt: Context, intent: Intent) {
-            executor.shutdown()
-            mainHandler.removeCallbacksAndMessages(null)
-            progressBarDialog!!.dismiss()
-            unRegisterOnComplete()
+//    var onComplete: BroadcastReceiver = object : BroadcastReceiver() {
+//        override fun onReceive(ctxt: Context, intent: Intent) {
+//            executor.shutdown()
+//            mainHandler.removeCallbacksAndMessages(null)
+//            progressBarDialog!!.dismiss()
+//            unRegisterOnComplete()
+//
+//            requestInstallAPK()
+//        }
+//    }
 
-            requestInstallAPK()
-        }
-    }
-
-    private fun unRegisterOnComplete() {
-        context!!.unregisterReceiver(onComplete)
-    }
+//    private fun unRegisterOnComplete() {
+//        context!!.unregisterReceiver(onComplete)
+//    }
 
     private val mainHandler = Handler(
         Looper.getMainLooper()

@@ -38,7 +38,8 @@ class _MoreApplicationState extends State<MoreApplication> {
       'downloadIcon': downloadIcon,
       'downloadThumbnail': downloadThumbnail,
       'downloadName': downloadName,
-      'downloadTitle': widget.downloadTitle
+      'downloadTitle': widget.downloadTitle,
+      'isUpdate': false,
     });
   }
 
@@ -115,8 +116,8 @@ class _MoreApplicationState extends State<MoreApplication> {
           );
         },
       ) : const Center(
-      child: CircularProgressIndicator(),
-    ),
+        child: CircularProgressIndicator(),
+      ),
     );
   }
 }
