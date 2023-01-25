@@ -86,7 +86,7 @@ class _MoreApp1State extends State<MoreApp1> {
             height: 10,
           ),
           SizedBox(
-            height: 150,
+            height: 170,
             child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 itemCount: data['app_list'].length,
