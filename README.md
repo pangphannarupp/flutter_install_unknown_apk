@@ -48,20 +48,31 @@ void checkAppUpdate() async {
 }
 ```
 2. More Application
+- screen 0
 ```dart
-String url = 'https://raw.githubusercontent.com/pangphannarupp/appstore/main/api.json?r=${Random().nextInt(1000)}';
-Navigator.push(
-    context,
-    MaterialPageRoute(builder: (context) => MoreApplication(
-        screenTitle: 'កម្មវិធីផ្សេងទៀត',
-        description: 'ទាញយក និងដំឡើង',
-        downloadTitle: 'កំពុងទាញយក... ',
-        api: url
-    )),
+String apiUrl = 'https://raw.githubusercontent.com/pangphannarupp/appstore/main/api.json?r=${Random().nextInt(1000)}';
+MoreApp0(
+  screenTitle: 'កម្មវិធីផ្សេងទៀត',
+  downloadText: 'ទាញយក និងដំឡើង',
+  downloadTitle: 'កំពុងទាញយក... ',
+  api: apiUrl
+);
+```
+- screen 1
+```dart
+String apiUrl = 'https://raw.githubusercontent.com/pangphannarupp/appstore/main/api.json?r=${Random().nextInt(1000)}';
+String typeApiUrl = 'https://raw.githubusercontent.com/pangphannarupp/appstore/main/type_api.json?r=${Random().nextInt(1000)}';
+MoreApp1(
+  screenTitle: 'កម្មវិធីផ្សេងទៀត',
+  downloadText: 'ទាញយក និងដំឡើង',
+  downloadTitle: 'កំពុងទាញយក... ',
+  api: apiUrl,
+  typeApi: typeApiUrl,
 );
 ```
 
 ## Data
+- App
 ```json
 {
     "app_name": "Application Name",
@@ -69,6 +80,14 @@ Navigator.push(
     "app_version": "1.0.0",
     "app_url": "com.app.name.1.0.0.apk",
     "app_icon": "com.app.name.icon.png",
-    "app_thumbnail": "com.app.name.thumbnail.png"
+    "app_thumbnail": "com.app.name.thumbnail.png",
+    "type_id": 1
+}
+```
+- App Type
+```json
+{
+  "type_name": "Education",
+  "type_id": 1
 }
 ```

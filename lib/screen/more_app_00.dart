@@ -2,25 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:flutter_install_unknown_apk/flutter_install_unknown_apk.dart';
 import 'package:flutter_install_unknown_apk/service/api.dart';
 
-class MoreApplication extends StatefulWidget {
-  const MoreApplication({Key? key, required this.screenTitle, required this.description, required this.downloadTitle, required this.api}) : super(key: key);
+class MoreApp0 extends StatefulWidget {
+  const MoreApp0({Key? key, required this.screenTitle, required this.downloadText, required this.downloadTitle, required this.api}) : super(key: key);
 
   final String api;
   final String screenTitle;
-  final String description;
+  final String downloadText;
   final String downloadTitle;
 
   @override
-  State<MoreApplication> createState() => _MoreApplicationState();
+  State<MoreApp0> createState() => _MoreApp0State();
 }
 
-class _MoreApplicationState extends State<MoreApplication> {
+class _MoreApp0State extends State<MoreApp0> {
   final plugin = FlutterInstallUnknownApk();
 
   List<dynamic> data = [];
 
   void getData() async {
-    var jsonResponse = await FlutterInstallUnknownApkApi(api: widget.api).getAll();
+    var jsonResponse = await FlutterInstallUnknownApkApi(api: widget.api).getOnlyAppNotInstall();
     setState(() {
       data = jsonResponse;
       data.shuffle();
@@ -101,7 +101,7 @@ class _MoreApplicationState extends State<MoreApplication> {
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Center(
-                          child: Text(widget.description,
+                          child: Text(widget.downloadText,
                             style: const TextStyle(
                                 color: Colors.white
                             ),),

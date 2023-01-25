@@ -1,5 +1,3 @@
-import 'dart:math';
-
 import 'package:flutter_install_unknown_apk/flutter_install_unknown_apk.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert' as convert;
@@ -7,7 +5,8 @@ import 'dart:convert' as convert;
 class FlutterInstallUnknownApkApi {
 
   final String api;
-  FlutterInstallUnknownApkApi({required this.api});
+  final String? typeApi;
+  FlutterInstallUnknownApkApi({required this.api, this.typeApi});
 
   final plugin = FlutterInstallUnknownApk();
   String downloadUrl = '';
@@ -56,6 +55,68 @@ class FlutterInstallUnknownApkApi {
     }
 
     return [];
+  }
+
+  Future<List<Map<String, dynamic>>> getTypesAndAppList() async {
+    var result = <Map<String, dynamic>>[];
+    var url = Uri.parse(typeApi!);
+    var response = await http.get(url);
+    if (response.statusCode == 200) {
+      var jsonResponse =
+      convert.jsonDecode(response.body) as List<dynamic>;
+      for(int i = 0; i < jsonResponse.length; i++) {
+        if(jsonResponse[i]['type_id'] != 200) {
+          var data = <String, dynamic>{};
+          var appList = await getAppByTypeId(jsonResponse[i]['type_id']);
+          if(appList.isNotEmpty) {
+            data["type"] = jsonResponse[i];
+            data["app_list"] = appList;
+            result.add(data);
+          }
+        }
+      }
+    }
+
+    return result;
+  }
+
+  Future<List<dynamic>> getAppByTypeId(int typeId) async {
+    var result = [];
+    var jsonResponse = await getAll();
+    for(int i = 0; i < jsonResponse.length; i++) {
+      if(jsonResponse[i]['type_id'] == typeId) {
+        Map<String, dynamic> responseFromNative = await plugin.execute('APPLICATION_PLUGIN', {
+          'type': 'app_installed_or_not',
+          'app_id': jsonResponse[i]['app_id'],
+        });
+        if(!responseFromNative['result']) {
+          result.add(jsonResponse[i]);
+        }
+        // result.add(jsonResponse[i]);
+      }
+
+      if(i == jsonResponse.length - 1) {
+        result.shuffle();
+      }
+    }
+
+    return result;
+  }
+
+  Future<List<dynamic>> getOnlyAppNotInstall() async {
+    var result = [];
+    var jsonResponse = await getAll();
+    for(int i = 0; i < jsonResponse.length; i++) {
+      Map<String, dynamic> responseFromNative = await plugin.execute('APPLICATION_PLUGIN', {
+        'type': 'app_installed_or_not',
+        'app_id': jsonResponse[i]['app_id'],
+      });
+      if(!responseFromNative['result']) {
+        result.add(jsonResponse[i]);
+      }
+    }
+
+    return result;
   }
 
   Future<dynamic> getByAppId(String appId) async {

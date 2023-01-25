@@ -3,6 +3,8 @@
 package phanna.app.flutter_install_unknown_apk.plugin
 
 import android.content.*
+import android.content.pm.PackageManager
+import android.content.pm.PackageManager.NameNotFoundException
 import android.net.Uri
 import android.os.BatteryManager
 import android.os.Build
@@ -30,6 +32,7 @@ class ApplicationPlugin: Plugin() {
             "restart" -> restartApplication()
             "app_setting" -> openAppSetting()
             "app_info" -> checkAppInfo()
+            "app_installed_or_not" -> checkAppInstalledOrNot(param["app_id"].toString())
             //else -> super.noImplementation(callback)
         }
     }
@@ -130,13 +133,20 @@ class ApplicationPlugin: Plugin() {
         callback!!.success(result)
     }
 
-    private val batteryInfoReceiver: BroadcastReceiver = object : BroadcastReceiver() {
-        override fun onReceive(context: Context?, intent: Intent) {
-            val level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
-            val scale = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1)
-            val batteryLevel = level * 100 / scale.toFloat()
-
-            callbackSuccess(batteryLevel)
+    private fun checkAppInstalledOrNot(appId: String) {
+        val packageManager = context!!.packageManager
+        try {
+            packageManager.getPackageInfo(appId, PackageManager.GET_ACTIVITIES)
+            result = mutableMapOf()
+            result!!["result"] = true
+            callback!!.success(result)
+            return
+        } catch (e: NameNotFoundException) {
+            e.printStackTrace()
         }
+
+        result = mutableMapOf()
+        result!!["result"] = false
+        callback!!.success(result)
     }
 }
