@@ -35,12 +35,16 @@ class FlutterInstallUnknownApkApi {
     //print('app info => $result');
     var appInfo = await getByAppId(result['packageName']);
     print('appInfo => $appInfo');
-    downloadUrl = appInfo['app_url'].toString();
-    downloadIcon = appInfo['app_icon'].toString();
-    downloadThumbnail = appInfo['app_thumbnail'].toString();
-    downloadName = appInfo['app_name'].toString();
-    //print('appInfo => $appInfo');
-    return await canUpdateFromApi(result);
+    if(appInfo != null) {
+      downloadUrl = appInfo['app_url'].toString();
+      downloadIcon = appInfo['app_icon'].toString();
+      downloadThumbnail = appInfo['app_thumbnail'].toString();
+      downloadName = appInfo['app_name'].toString();
+      //print('appInfo => $appInfo');
+      return await canUpdateFromApi(result);
+    }
+
+    return false;
   }
 
   Future<List<dynamic>> getAll() async {
@@ -137,7 +141,7 @@ class FlutterInstallUnknownApkApi {
     }
 
     var localAppVersions = (appInfo['appVersion'].toString().split('.').length == 2 ?
-        appInfo['appVersion'] + '.0' : appInfo['appVersion']).toString().split('.');
+    appInfo['appVersion'] + '.0' : appInfo['appVersion']).toString().split('.');
     var serverAppVersions = jsonResponse['app_version'].toString().split('.');
     if(int.parse(serverAppVersions[0]) > int.parse(localAppVersions[0])) {
       return true;
